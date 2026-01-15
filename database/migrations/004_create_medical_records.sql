@@ -1,9 +1,20 @@
 CREATE TABLE medical_records (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    member_id BIGINT NOT NULL,
-    record_type ENUM('diagnosis','allergy','condition','vital','note') NOT NULL,
-    description TEXT,
-    recorded_at DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (member_id) REFERENCES family_members(id) ON DELETE CASCADE
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+  family_member_id BIGINT NOT NULL,
+
+  record_type ENUM(
+    'consultation','diagnosis',
+    'prescription','test_result'
+  ) NOT NULL,
+
+  description TEXT NOT NULL,
+  record_date DATE NOT NULL,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_records_member
+    FOREIGN KEY (family_member_id)
+    REFERENCES family_members(id)
+    ON DELETE CASCADE
 );
