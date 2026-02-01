@@ -36,3 +36,18 @@ export async function getFamilyById(id: number) {
 
   return families[0] || null;
 }
+
+export async function getAllFamilies() {
+  const [rows] = await pool.query(`
+    SELECT 
+      f.id,
+      f.name,
+      COUNT(m.id) AS members_count
+    FROM families f
+    LEFT JOIN family_members m ON m.family_id = f.id
+    GROUP BY f.id
+    ORDER BY f.created_at DESC
+  `);
+
+  return rows;
+}

@@ -56,3 +56,8 @@ export async function getFamily(
     next(error);
   }
 }
+
+export async function getFamilies(_: Request, res: Response) {
+  const families = await familyService.getAllFamilies();
+  res.json(families);
+}

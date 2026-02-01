@@ -5,5 +5,6 @@ const router = Router();
 
 router.post("/", familyController.createFamily);
 router.get("/:id", familyController.getFamily);
+router.get("/", familyController.getFamilies);
 
 export default router;

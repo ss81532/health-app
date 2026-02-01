@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import healthRoutes from "../routes/health.routes";
 import apiRoutes from "../routes/index";
 
 export const createApp = () => {
@@ -9,7 +8,6 @@ export const createApp = () => {
   app.use(cors());
   app.use(express.json());
 
-  app.use("/health", healthRoutes);
   app.use("/api", apiRoutes);
   // basic error handler
   app.use((err: any, req: any, res: any, next: any) => {
