@@ -1,7 +1,23 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, Modal, Form, Toast, ToastContainer } from "react-bootstrap";
-import { fetchFamilies, createFamily, type Family, type FamilyCreateData } from "../api/families.api";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Modal,
+  Form,
+  Toast,
+  ToastContainer,
+} from "react-bootstrap";
+import { FiUsers, FiPlus, FiArrowRight } from "react-icons/fi";
+import {
+  fetchFamilies,
+  createFamily,
+  type Family,
+  type FamilyCreateData,
+} from "../api/families.api";
 
 export default function Families() {
   const navigate = useNavigate();
@@ -19,7 +35,7 @@ export default function Families() {
       const data = await fetchFamilies();
       setFamilies(data);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load families", err);
     }
   }
 
@@ -27,58 +43,78 @@ export default function Families() {
     if (!newFamilyName.trim()) return;
 
     try {
-      const newFamily: FamilyCreateData = { name: newFamilyName.trim() };
-
-      await createFamily(newFamily);
+      const payload: FamilyCreateData = { name: newFamilyName.trim() };
+      await createFamily(payload);
 
       setShowModal(false);
       setNewFamilyName("");
-
       loadFamilies();
-
-      // Show toast
       setShowToast(true);
     } catch (err) {
-      console.error("Failed to create family:", err);
+      console.error("Failed to create family", err);
       alert("Failed to create family. Please try again.");
     }
   }
 
   return (
     <Container className="py-4">
+      {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Families</h1>
+        <h1 className="d-flex align-items-center gap-2">
+          <FiUsers /> Families
+        </h1>
+
         <Button variant="primary" onClick={() => setShowModal(true)}>
-          + Create Family
+          <FiPlus className="me-1" /> Create Family
         </Button>
       </div>
 
-      <Row xs={1} md={2} lg={3} className="g-3">
-        {families.map((family) => (
-          <Col key={family.id}>
-            <Card
-              className="h-100 shadow-sm"
-              onClick={() => navigate(`/dashboard/${family.id}`)}
-              style={{ cursor: "pointer" }}
-            >
-              <Card.Body>
-                <Card.Title>{family.name}</Card.Title>
-                <Card.Text>{family.members_count} members</Card.Text>
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/dashboard/${family.id}`);
-                  }}
-                >
-                  View
-                </Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      {/* Families Grid */}
+      {families.length > 0 ? (
+        <Row xs={1} md={2} lg={3} className="g-4">
+          {families.map((family) => (
+            <Col key={family.id}>
+              <Card
+                className="h-100 shadow-sm family-card"
+                onClick={() => navigate(`/dashboard/${family.id}`)}
+              >
+                <Card.Body>
+                  <div className="d-flex align-items-center gap-2 mb-2">
+                    <FiUsers className="text-primary" />
+                    <Card.Title className="mb-0">
+                      {family.name}
+                    </Card.Title>
+                  </div>
+
+                  <Card.Text className="text-muted mb-3">
+                    {family.members_count} members
+                  </Card.Text>
+
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/dashboard/${family.id}`);
+                    }}
+                  >
+                    View <FiArrowRight className="ms-1" />
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      ) : (
+        /* Empty State */
+        <div className="text-center text-muted py-5">
+          <FiUsers size={48} className="mb-3 text-primary" />
+          <p className="mb-3">No families created yet</p>
+          <Button variant="primary" onClick={() => setShowModal(true)}>
+            <FiPlus className="me-1" /> Create your first family
+          </Button>
+        </div>
+      )}
 
       {/* Create Family Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
@@ -87,11 +123,12 @@ export default function Families() {
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group controlId="familyName">
+            <Form.Group>
               <Form.Label>Family Name</Form.Label>
               <Form.Control
+                autoFocus
                 type="text"
-                placeholder="Enter family name"
+                placeholder="e.g. Sharma Family"
                 value={newFamilyName}
                 onChange={(e) => setNewFamilyName(e.target.value)}
               />
@@ -102,17 +139,21 @@ export default function Families() {
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleCreateFamily}>
+          <Button
+            variant="primary"
+            disabled={!newFamilyName.trim()}
+            onClick={handleCreateFamily}
+          >
             Create
           </Button>
         </Modal.Footer>
       </Modal>
 
-      {/* Toast Notification */}
+      {/* Toast */}
       <ToastContainer position="top-end" className="p-3">
         <Toast
-          onClose={() => setShowToast(false)}
           show={showToast}
+          onClose={() => setShowToast(false)}
           delay={3000}
           autohide
           bg="success"
@@ -120,7 +161,9 @@ export default function Families() {
           <Toast.Header>
             <strong className="me-auto">Success</strong>
           </Toast.Header>
-          <Toast.Body className="text-white">Family created successfully!</Toast.Body>
+          <Toast.Body className="text-white">
+            Family created successfully!
+          </Toast.Body>
         </Toast>
       </ToastContainer>
     </Container>

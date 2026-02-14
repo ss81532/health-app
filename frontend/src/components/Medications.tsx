@@ -117,111 +117,261 @@ export default function Medications() {
   }
 
   return (
-    <Container className="py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Medications</h2>
-        <Button variant="primary" onClick={() => setShowModal(true)}>+ Add Medication</Button>
+  <Container className="py-4">
+    {/* Header */}
+    <div className="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 className="fw-semibold mb-1">Medications</h2>
+        <small className="text-muted">
+          Manage ongoing and past prescriptions
+        </small>
       </div>
 
-      <Row xs={1} md={2} lg={3} className="g-3 mb-4">
-        {medications.map(med => (
-          <Col key={med.id}>
-            <Card className="h-100 shadow-sm">
-              <Card.Body>
-                <Card.Title>
-                  {med.medicine_name}{" "}
-                  {med.is_active && <Badge bg="success">Active</Badge>}
+      <Button variant="primary" onClick={() => setShowModal(true)}>
+        + Add Medication
+      </Button>
+    </div>
+
+    {/* Empty state */}
+    {medications.length === 0 && (
+      <div className="text-center text-muted py-5">
+        <h6>No medications added yet</h6>
+        <p className="mb-0">Click “Add Medication” to get started</p>
+      </div>
+    )}
+
+    {/* Medication Cards */}
+    <Row xs={1} md={2} lg={3} className="g-4">
+      {medications.map((med) => (
+        <Col key={med.id}>
+          <Card className="h-100 card">
+            <Card.Body className="d-flex flex-column">
+              {/* Title */}
+              <div className="d-flex justify-content-between align-items-start mb-2">
+                <Card.Title className="fw-semibold mb-0">
+                  {med.medicine_name}
                 </Card.Title>
-                <Card.Text>
-                  Dosage: {med.dosage || "-"} <br/>
-                  Frequency: {med.frequency} <br/>
-                  Timing: {med.timing.join(", ")} <br/>
-                  Start: {med.start_date} <br/>
-                  End: {med.end_date || "-"} <br/>
-                  Instructions: {med.instructions || "-"}
-                </Card.Text>
-                <Button size="sm" variant="outline-secondary" onClick={() => handleEdit(med)}>Edit</Button>{" "}
-                <Button size="sm" variant="outline-danger" onClick={() => handleDelete(med.id)}>Delete</Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
 
-      {/* Modal */}
-      <Modal show={showModal} onHide={() => { setShowModal(false); resetForm(); }} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>{editingMedication ? "Edit Medication" : "Add Medication"}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-2">
-              <Form.Label>Medicine Name *</Form.Label>
-              <Form.Control value={medicineName} onChange={e => setMedicineName(e.target.value)} />
-            </Form.Group>
+                {med.is_active && (
+                  <Badge bg="success" pill>
+                    Active
+                  </Badge>
+                )}
+              </div>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Dosage</Form.Label>
-              <Form.Control value={dosage} onChange={e => setDosage(e.target.value)} />
-            </Form.Group>
+              {/* Meta Info */}
+              <div className="text-muted small mb-3">
+                <div>
+                  <strong>Dosage:</strong> {med.dosage || "-"}
+                </div>
+                <div>
+                  <strong>Frequency:</strong>{" "}
+                  <Badge bg="info" className="ms-1">
+                    {med.frequency}
+                  </Badge>
+                </div>
+                <div>
+                  <strong>Timing:</strong>{" "}
+                  {med.timing.map((t) => (
+                    <Badge
+                      key={t}
+                      bg="secondary"
+                      className="me-1 text-capitalize"
+                    >
+                      {t}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Frequency *</Form.Label>
-              <Form.Select value={frequency} onChange={e => setFrequency(e.target.value as any)}>
-                <option value="once">Once</option>
-                <option value="twice">Twice</option>
-                <option value="thrice">Thrice</option>
-              </Form.Select>
-            </Form.Group>
+              {/* Dates */}
+              <div className="small mb-3">
+                <div>
+                  <strong>Start:</strong> {med.start_date}
+                </div>
+                <div>
+                  <strong>End:</strong> {med.end_date || "-"}
+                </div>
+              </div>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Timing *</Form.Label><br/>
-              {["morning","afternoon","evening","night"].map(t => (
+              {/* Instructions */}
+              {med.instructions && (
+                <div className="small text-muted mb-3">
+                  <strong>Instructions:</strong> {med.instructions}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="mt-auto d-flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline-primary"
+                  onClick={() => handleEdit(med)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline-danger"
+                  onClick={() => handleDelete(med.id)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      ))}
+    </Row>
+
+    {/* Modal */}
+    <Modal
+      show={showModal}
+      onHide={() => {
+        setShowModal(false);
+        resetForm();
+      }}
+      centered
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>
+          {editingMedication ? "Edit Medication" : "Add Medication"}
+        </Modal.Title>
+      </Modal.Header>
+
+      <Modal.Body>
+        <Form>
+          <Form.Group className="mb-3">
+            <Form.Label>Medicine Name *</Form.Label>
+            <Form.Control
+              value={medicineName}
+              onChange={(e) => setMedicineName(e.target.value)}
+              placeholder="e.g. Paracetamol"
+            />
+          </Form.Group>
+
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Dosage</Form.Label>
+                <Form.Control
+                  value={dosage}
+                  onChange={(e) => setDosage(e.target.value)}
+                  placeholder="e.g. 500mg"
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Frequency *</Form.Label>
+                <Form.Select
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value as any)}
+                >
+                  <option value="once">Once</option>
+                  <option value="twice">Twice</option>
+                  <option value="thrice">Thrice</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Timing *</Form.Label>
+            <div className="d-flex flex-wrap gap-2">
+              {["morning", "afternoon", "evening", "night"].map((t) => (
                 <Form.Check
-                  inline
                   key={t}
-                  label={t}
                   type="checkbox"
+                  label={t}
                   checked={timing.includes(t)}
                   onChange={() => toggleTiming(t)}
                 />
               ))}
-            </Form.Group>
+            </div>
+          </Form.Group>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Start Date *</Form.Label>
-              <Form.Control type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-            </Form.Group>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Start Date *</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </Form.Group>
+            </Col>
 
-            <Form.Group className="mb-2">
-              <Form.Label>End Date</Form.Label>
-              <Form.Control type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-            </Form.Group>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>End Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Instructions</Form.Label>
-              <Form.Control value={instructions} onChange={e => setInstructions(e.target.value)} />
-            </Form.Group>
+          <Form.Group className="mb-2">
+            <Form.Label>Instructions</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={2}
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+            />
+          </Form.Group>
 
-            <Form.Group className="mb-2">
-              <Form.Check type="checkbox" label="Active" checked={isActive} onChange={e => setIsActive(e.target.checked)} />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
+          <Form.Check
+            className="mt-3"
+            type="checkbox"
+            label="Mark as Active"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+          />
+        </Form>
+      </Modal.Body>
 
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => { setShowModal(false); resetForm(); }}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit}>{editingMedication ? "Update" : "Add"}</Button>
-        </Modal.Footer>
-      </Modal>
+      <Modal.Footer>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            setShowModal(false);
+            resetForm();
+          }}
+        >
+          Cancel
+        </Button>
+        <Button variant="primary" onClick={handleSubmit}>
+          {editingMedication ? "Update Medication" : "Add Medication"}
+        </Button>
+      </Modal.Footer>
+    </Modal>
 
-      {/* Toast */}
-      <ToastContainer position="top-end" className="p-3">
-        <Toast onClose={() => setShowToast(false)} show={showToast} delay={3000} autohide bg="success">
-          <Toast.Header><strong className="me-auto">Success</strong></Toast.Header>
-          <Toast.Body className="text-white">{editingMedication ? "Medication updated" : "Medication added"} successfully!</Toast.Body>
-        </Toast>
-      </ToastContainer>
-    </Container>
-  );
+    {/* Toast */}
+    <ToastContainer position="top-end" className="p-3">
+      <Toast
+        onClose={() => setShowToast(false)}
+        show={showToast}
+        delay={3000}
+        autohide
+        bg="success"
+      >
+        <Toast.Header>
+          <strong className="me-auto">Success</strong>
+        </Toast.Header>
+        <Toast.Body className="text-white">
+          {editingMedication
+            ? "Medication updated successfully!"
+            : "Medication added successfully!"}
+        </Toast.Body>
+      </Toast>
+    </ToastContainer>
+  </Container>
+);
+
 }

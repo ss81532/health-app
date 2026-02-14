@@ -32,3 +32,8 @@ export async function createMember(familyId: number, member: MemberCreateData) {
   const response = await axios.post<Member>(`${API_BASE_URL}/families/${familyId}/members`, member);
   return response.data;
 }
+
+export async function fetchMemberById(memberId: number): Promise<Member> {
+  const res = await axios.get(`${API_BASE_URL}/members/${memberId}`);
+  return res.data;
+}

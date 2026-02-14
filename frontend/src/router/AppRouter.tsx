@@ -7,7 +7,7 @@ import MemberDetails from "../components/MemberDetails";
 
 export default function AppRouter() {
   return (
-    <BrowserRouter>
+
       <Routes>
         <Route path="/" element={<Navigate to="/families" />} />
 
@@ -18,6 +18,6 @@ export default function AppRouter() {
 
         <Route path="*" element={<div>Page not found</div>} />
       </Routes>
-    </BrowserRouter>
+ 
   );
 }

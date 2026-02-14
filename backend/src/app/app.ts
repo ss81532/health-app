@@ -1,13 +1,18 @@
 import express from "express";
 import cors from "cors";
 import apiRoutes from "../routes/index";
-
+import path from "path";
 export const createApp = () => {
   const app = express();
 
   app.use(cors());
   app.use(express.json());
 
+   // 🔹 Serve uploaded files
+  app.use(
+    "/uploads",
+    express.static(path.join(process.cwd(), "uploads"))
+  );
   app.use("/api", apiRoutes);
   // basic error handler
   app.use((err: any, req: any, res: any, next: any) => {

@@ -11,6 +11,7 @@ import {
   Toast,
   ToastContainer,
   Table,
+  Badge,
 } from "react-bootstrap";
 import {
 
@@ -19,8 +20,9 @@ import {
   type Medication,
   type MedicationCreateData,
 } from "../api/medications.api";
-import { fetchMembers, type Member } from "../api/members.api";
+import { fetchMemberById, fetchMembers, type Member } from "../api/members.api";
 import { calculateAge } from "../utils/helper";
+import { fetchMedicalDocuments, uploadMedicalDocument, type MedicalDocument } from "../api/medicalDocuments.api";
 
 export default function MemberDetails() {
   const { memberId } = useParams();
@@ -40,19 +42,27 @@ export default function MemberDetails() {
   const [endDate, setEndDate] = useState("");
   const [instructions, setInstructions] = useState("");
 
+  const [documents, setDocuments] = useState<MedicalDocument[]>([]);
+const [selectedFile, setSelectedFile] = useState<File | null>(null);
+const [uploading, setUploading] = useState(false);
+const [docsLoading, setDocsLoading] = useState(false);
+const [docsError, setDocsError] = useState<string | null>(null);
+const FILE_BASE_URL = 'http://localhost:3000'
   // Load member and medications
-  useEffect(() => {
-    if (memberId) {
-      loadMember(Number(memberId));
-      loadMedications(Number(memberId));
-    }
-  }, [memberId]);
+useEffect(() => {
+  const id = Number(memberId);
+  if (!id || isNaN(id)) return;
+
+  loadMember(id);
+  loadMedications(id);
+  loadDocuments(id);
+}, [memberId]);
 
 
 
   async function loadMember(id: number) {
     try {
-      const m = await fetchMembers(id);
+      const m = await fetchMemberById(id);
       setMember(m);
     } catch (err) {
       console.error("Failed to fetch member:", err);
@@ -69,6 +79,36 @@ export default function MemberDetails() {
       setMedications([]);
     }
   }
+
+async function loadDocuments(id: number) {
+  try {
+    setDocsLoading(true);
+    setDocsError(null);
+
+    const docs = await fetchMedicalDocuments(id);
+
+    // Defensive check
+    if (!Array.isArray(docs)) {
+      throw new Error("Invalid documents response");
+    }
+
+    setDocuments(docs);
+  } catch (e: any) {
+    console.error("Failed to load documents", e);
+
+    if (e?.response?.status === 404) {
+      setDocsError("No documents found for this member.");
+      setDocuments([]);
+    } else if (e?.response?.status === 500) {
+      setDocsError("Server error while loading documents.");
+    } else {
+      setDocsError("Unable to load documents. Please try again.");
+    }
+  } finally {
+    setDocsLoading(false);
+  }
+}
+
 
   async function handleAddMedication() {
     if (!medicineName.trim() || !frequency || timing.length === 0 || !startDate)
@@ -114,30 +154,52 @@ export default function MemberDetails() {
     }
   };
 
+  async function handleUploadDocument() {
+  if (!selectedFile || !memberId) return;
+
+  if (selectedFile.type !== "application/pdf") {
+    return alert("Only PDF files are allowed");
+  }
+
+  try {
+    setUploading(true);
+    await uploadMedicalDocument(Number(memberId), selectedFile);
+    setSelectedFile(null);
+    await loadDocuments(Number(memberId));
+  } catch (e) {
+    alert("Upload failed");
+  } finally {
+    setUploading(false);
+  }
+}
+  
+
   return (
     <Container className="py-4">
       {member && (
-        <Card className="mb-4 shadow-sm">
-          <Card.Body>
-            <Card.Title>
-              {member.first_name} {member.last_name}
-            </Card.Title>
-            <Card.Text>
-              Age: {calculateAge(member.date_of_birth)} <br />
-              Gender: {member.gender} <br />
-            </Card.Text>
+        <Card className="mb-4 card">
+          <Card.Body className="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 className="fw-semibold mb-1">
+                {member.first_name} {member.last_name}
+              </h5>
+              <div className="text-muted small">
+                Age: {calculateAge(member.date_of_birth)} ·{" "}
+                {member.gender}
+              </div>
+            </div>
           </Card.Body>
         </Card>
       )}
 
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>Medications</h4>
-        <Button variant="primary" onClick={() => setShowAddModal(true)}>
-          + Add Medication
-        </Button>
-      </div>
+       <div className="d-flex justify-content-between align-items-center mb-3">
+    <h4 className="fw-semibold">Medications</h4>
+    <Button size="sm" variant="primary" onClick={() => setShowAddModal(true)}>
+      + Add Medication
+    </Button>
+  </div>
 
-      <Table striped bordered hover>
+      {/* <Table striped bordered hover>
         <thead>
           <tr>
             <th>Name</th>
@@ -171,7 +233,66 @@ export default function MemberDetails() {
             </tr>
           )}
         </tbody>
+      </Table> */}
+       <Card className="card mb-4">
+    <Card.Body className="p-0">
+      <Table responsive hover className="mb-0 align-middle">
+        <thead className="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Dosage</th>
+            <th>Frequency</th>
+            <th>Timing</th>
+            <th>Duration</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {medications.map((med) => (
+            <tr key={med.id}>
+              <td className="fw-medium">{med.medicine_name}</td>
+              <td>{med.dosage || "-"}</td>
+
+              <td>
+                <Badge bg="info">{med.frequency}</Badge>
+              </td>
+
+              <td>
+                {med.timing.map((t) => (
+                  <Badge
+                    key={t}
+                    bg="secondary"
+                    className="me-1 text-capitalize"
+                  >
+                    {t}
+                  </Badge>
+                ))}
+              </td>
+
+              <td className="small">
+                {med.start_date} → {med.end_date || "Ongoing"}
+              </td>
+
+              <td>
+                <Badge bg={med.is_active ? "success" : "secondary"}>
+                  {med.is_active ? "Active" : "Inactive"}
+                </Badge>
+              </td>
+            </tr>
+          ))}
+
+          {medications.length === 0 && (
+            <tr>
+              <td colSpan={6} className="text-center text-muted py-4">
+                No medications added yet
+              </td>
+            </tr>
+          )}
+        </tbody>
       </Table>
+    </Card.Body>
+  </Card>
 
       {/* Add Medication Modal */}
       <Modal
@@ -285,6 +406,170 @@ export default function MemberDetails() {
           </Toast.Body>
         </Toast>
       </ToastContainer>
+
+      <hr className="my-4" />
+
+<div className="d-flex justify-content-between align-items-center mb-3">
+    <h4 className="fw-semibold">Medical Documents</h4>
+  </div>
+
+{/* <Card className="mb-4 shadow-sm">
+  <Card.Body>
+    <Form.Group className="mb-3">
+      <Form.Label>Upload PDF</Form.Label>
+      <Form.Control
+        type="file"
+        accept="application/pdf"
+        onChange={(e) =>
+          setSelectedFile(e.target.files?.[0] ?? null)
+        }
+      />
+    </Form.Group>
+
+    <Button
+      variant="primary"
+      disabled={!selectedFile || uploading}
+      onClick={handleUploadDocument}
+    >
+      {uploading ? "Uploading..." : "Upload Document"}
+    </Button>
+  </Card.Body>
+</Card> */}
+ <Card className="card mb-3">
+    <Card.Body>
+      <Form.Group className="mb-3">
+        <Form.Label className="fw-medium">
+          Upload Medical PDF
+        </Form.Label>
+        <Form.Control
+          type="file"
+          accept="application/pdf"
+          onChange={(e) =>
+            setSelectedFile(e.target.files?.[0] ?? null)
+          }
+        />
+      </Form.Group>
+
+      <Button
+        variant="primary"
+        disabled={!selectedFile || uploading}
+        onClick={handleUploadDocument}
+      >
+        {uploading ? "Uploading..." : "Upload Document"}
+      </Button>
+    </Card.Body>
+  </Card>
+
+  {/* Documents Table */}
+  <Card className="card">
+    <Card.Body className="p-0">
+      <Table hover responsive className="mb-0 align-middle">
+        <thead className="table-light">
+          <tr>
+            <th>Document</th>
+            <th>Uploaded</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {documents.map((doc) => (
+            <tr key={doc.id}>
+              <td className="fw-medium">
+                📄 {doc.document_name}
+              </td>
+              <td className="small text-muted">
+                {new Date(doc.uploaded_at).toLocaleDateString()}
+              </td>
+              <td>
+                <a
+                  href={`${FILE_BASE_URL}${doc.file_url}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View
+                </a>
+              </td>
+            </tr>
+          ))}
+
+          {docsLoading && (
+            <tr>
+              <td colSpan={3} className="text-center py-3">
+                Loading documents...
+              </td>
+            </tr>
+          )}
+
+          {docsError && !docsLoading && (
+            <tr>
+              <td colSpan={3} className="text-center text-danger">
+                {docsError}
+              </td>
+            </tr>
+          )}
+
+          {!docsLoading && !docsError && documents.length === 0 && (
+            <tr>
+              <td colSpan={3} className="text-center text-muted py-4">
+                No documents uploaded yet
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
+    </Card.Body>
+  </Card>
+
+{/* <Table bordered hover>
+  <thead>
+    <tr>
+      <th>File Name</th>
+      <th>Uploaded At</th>
+      <th>View</th>
+    </tr>
+  </thead>
+  <tbody>
+    {documents.map((doc) => (
+      <tr key={doc.id}>
+        <td>
+          📄 {doc.document_name}
+        </td>
+        <td>{new Date(doc.uploaded_at).toLocaleDateString()}</td>
+        <td>
+          <a href={`${FILE_BASE_URL}${doc.file_url}`} target="self" rel="noreferrer">
+            View
+          </a>
+        </td>
+      </tr>
+    ))}
+    {docsLoading && (
+  <tr>
+    <td colSpan={3} className="text-center">
+      Loading documents...
+    </td>
+  </tr>
+)}
+
+{docsError && !docsLoading && (
+  <tr>
+    <td colSpan={3} className="text-center text-danger">
+      {docsError}
+    </td>
+  </tr>
+)}
+
+{!docsLoading && !docsError && documents.length === 0 && (
+  <tr>
+    <td colSpan={3} className="text-center">
+      No documents uploaded yet.
+    </td>
+  </tr>
+)}
+
+  </tbody>
+</Table> */}
     </Container>
   );
+
 }
