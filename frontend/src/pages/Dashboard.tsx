@@ -307,7 +307,7 @@ return (
   </Card.Header>
 
   <Card.Body style={{ height: 550 }}>
-    {loadingTree ? (
+    {loadingTree && members.length>0 && relationships.length>0 ? (
       <div className="text-muted text-center py-5">
         Loading family tree...
       </div>

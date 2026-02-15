@@ -47,7 +47,7 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
 const [uploading, setUploading] = useState(false);
 const [docsLoading, setDocsLoading] = useState(false);
 const [docsError, setDocsError] = useState<string | null>(null);
-const FILE_BASE_URL = 'http://localhost:3000'
+const FILE_BASE_URL = 'http://4.213.2.193:3000'
   // Load member and medications
 useEffect(() => {
   const id = Number(memberId);
