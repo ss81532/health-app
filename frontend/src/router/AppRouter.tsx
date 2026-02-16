@@ -3,6 +3,7 @@ import Dashboard from "../pages/Dashboard";
 import Families from "../pages/Families";
 import MedicalHistory from "../pages/MedicalHistory";
 import MemberDetails from "../components/MemberDetails";
+import AppointmentsPage from "../pages/AppointmentsPage";
 
 
 export default function AppRouter() {
@@ -15,7 +16,7 @@ export default function AppRouter() {
         <Route path="/dashboard/:familyId" element={<Dashboard />} />
         <Route path="/medical-history/:memberId" element={<MedicalHistory />} />
         <Route path="/members/:memberId" element={<MemberDetails />} />
-
+        <Route path="/appointments" element={<AppointmentsPage />} />
         <Route path="*" element={<div>Page not found</div>} />
       </Routes>
  

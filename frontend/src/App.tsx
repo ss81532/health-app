@@ -10,7 +10,6 @@ function App() {
       <BrowserRouter>
          <AppNavbar />
          <div className="page-container">
-            {/* Breadcrumb placed here so it's visible on all routes */}
             <BackButton />
             <AppRouter />
          </div>
