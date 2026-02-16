@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Spinner, Alert } from "react-bootstrap";
+import { Spinner, Alert, Col, Row } from "react-bootstrap";
 import AppointmentCard from "./AppointmentCard";
 import { fetchUpcomingAppointments } from "../../api/appointment.api";
 
@@ -26,9 +26,13 @@ export default function UpcomingAppointments({ familyId }: Props) {
 
   return (
     <>
+       <Row xs={1} md={2} lg={3} className="g-4">
       {appointments.map((appt) => (
-        <AppointmentCard key={appt.id} appointment={appt} />
+        <Col key={appt.id}>
+          <AppointmentCard appointment={appt} />
+        </Col>
       ))}
+    </Row>
     </>
   );
 }

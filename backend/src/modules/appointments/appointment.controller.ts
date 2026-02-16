@@ -23,7 +23,6 @@ export async function getByMember(req: Request, res: Response) {
 
 export async function create(req: Request, res: Response) {
   try {
-    console.log('srejn')
     const insertId = await appointmentService.createAppointment(req.body);
     res.status(201).json({ id: insertId, message: "Appointment created" });
   } catch (error) {

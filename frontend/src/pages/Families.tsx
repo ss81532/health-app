@@ -62,8 +62,9 @@ export default function Families() {
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="d-flex align-items-center gap-2">
-          <FiUsers /> Families
+          <FiUsers /> Families  
         </h1>
+        <h3>(select any family to proceed)</h3>
         <Button variant="primary" onClick={() => setShowModal(true)}>
           <FiPlus className="me-1" /> Create Family
         </Button>

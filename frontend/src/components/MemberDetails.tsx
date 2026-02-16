@@ -23,6 +23,7 @@ import {
 import { fetchMemberById, fetchMembers, type Member } from "../api/members.api";
 import { calculateAge, formatDate } from "../utils/helper";
 import { fetchMedicalDocuments, uploadMedicalDocument, type MedicalDocument } from "../api/medicalDocuments.api";
+import { Calendar, Person, PersonCircle } from "react-bootstrap-icons";
 
 export default function MemberDetails() {
   const { memberId } = useParams();
@@ -181,11 +182,11 @@ async function loadDocuments(id: number) {
           <Card.Body className="d-flex justify-content-between align-items-center">
             <div>
               <h5 className="fw-semibold mb-1">
-                {member.first_name} {member.last_name}
+                <PersonCircle className="me-2 text-primary" size={20} />{member.first_name} {member.last_name}
               </h5>
-              <div className="text-muted small">
-                Age: {calculateAge(member.date_of_birth)} ·{" "}
-                {member.gender}
+              <div className="text-muted small d-flex align-items-center gap-2">
+                <Calendar size={14} /> Age: {calculateAge(member.date_of_birth)} ·{" "}
+                <Person size={14} /> {member.gender}
               </div>
             </div>
           </Card.Body>

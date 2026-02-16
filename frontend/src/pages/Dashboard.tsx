@@ -254,17 +254,17 @@ dataService.setSelectedFamily(familyId)
           {/* ================= UPCOMING APPOINTMENTS ================= */}
       {members.length > 0 && (
         <Card className="mb-4 shadow-sm border-0">
-  <Card.Header className="fw-semibold d-flex justify-content-between align-items-center bg-light">
-    <div className="d-flex align-items-center">
-      <CalendarCheck className="me-2 text-primary" />
-      <span>Upcoming Appointments</span>
-    </div>
-  </Card.Header>
+          <Card.Header className="fw-semibold d-flex justify-content-between align-items-center bg-light">
+            <div className="d-flex align-items-center">
+              <CalendarCheck className="me-2 text-primary" />
+              <h1>Upcoming Appointments</h1>
+            </div>
+          </Card.Header>
 
-  <Card.Body>
-    <UpcomingAppointments familyId={familyId} />
-  </Card.Body>
-</Card>
+          <Card.Body>
+            <UpcomingAppointments familyId={familyId} />
+          </Card.Body>
+        </Card>
       )}
 
       {/* ================= EMPTY STATE ================= */}
@@ -281,57 +281,12 @@ dataService.setSelectedFamily(familyId)
         </Card>
       ) : (
         <>
-          {/* ================= MEMBERS GRID ================= */}
-          {/* <Row xs={1} md={2} lg={3} className="g-3 mb-4">
-            {members.map((member) => (
-              <Col key={member.id}>
-                <Card
-                  className="h-100 family-card shadow-sm"
-                  onClick={() => navigate(`/members/${member.id}`)}
-                >
-                  <Card.Body>
-                    <div className="d-flex align-items-center mb-3">
-                      <div className="me-3 text-primary">
-                        <PersonCircle size={36} />
-                      </div>
-                      <div>
-                        <Card.Title className="mb-0">
-                          {member.first_name} {member.last_name}
-                        </Card.Title>
-                        <small className="text-muted">
-                          Age {calculateAge(member.date_of_birth)}
-                        </small>
-                      </div>
-                    </div>
-
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="badge bg-light text-primary border">
-                        {member.gender}
-                      </span>
-
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/members/${member.id}`);
-                        }}
-                      >
-                        View
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row> */}
-             {/* Member */}
 {/* ================= MEMBERS SECTION ================= */}
 <Card className="mt-4 shadow-sm border-0">
   <Card.Header className="fw-semibold d-flex justify-content-between align-items-center bg-light">
     <div className="d-flex align-items-center">
       <PersonCircle className="me-2 text-primary" size={20} />
-      <span>Family Members</span>
+      <h1>Family Members</h1>
     </div>
 
     <span className="badge bg-primary rounded-pill px-3">
@@ -409,7 +364,7 @@ dataService.setSelectedFamily(familyId)
             <Card.Header className="fw-semibold d-flex justify-content-between align-items-center bg-light">
               <div className="d-flex align-items-center">
                 <HeartPulse className="me-2 text-success" />
-                <span>Active Medications</span>
+                <h1>Active Medications</h1>
               </div>
               <span className="badge bg-success rounded-pill px-3">
                 {activeMedications.length}
@@ -511,7 +466,7 @@ dataService.setSelectedFamily(familyId)
             <Card.Header className="fw-semibold d-flex justify-content-between align-items-center bg-light">
               <div className="d-flex align-items-center">
                 <TelephoneFill className="me-2 text-danger" />
-                <span>Emergency Contacts</span>
+                <h1>Emergency Contacts</h1>
               </div>
               <span className="badge bg-danger rounded-pill px-3">
                 {emergencyContacts.length}

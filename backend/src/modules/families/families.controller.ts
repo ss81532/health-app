@@ -65,7 +65,6 @@ export async function getFamilies(_: Request, res: Response) {
 export async function getActiveFamilyMedications(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    console.log(id+'ff')
     const meds =
       await familyService.getActiveFamilyMedications(
         Number(id)
