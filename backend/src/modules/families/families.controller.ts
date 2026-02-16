@@ -61,3 +61,25 @@ export async function getFamilies(_: Request, res: Response) {
   const families = await familyService.getAllFamilies();
   res.json(families);
 }
+
+export async function getActiveFamilyMedications(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    console.log(id+'ff')
+    const meds =
+      await familyService.getActiveFamilyMedications(
+        Number(id)
+      );
+
+    res.json({
+      success: true,
+      data: meds,
+    });
+  } catch (error) {
+    console.error("Failed to fetch active medications:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch medications",
+    });
+  }
+}

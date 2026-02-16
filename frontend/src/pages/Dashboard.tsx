@@ -11,6 +11,13 @@ import {
   Toast,
   ToastContainer,
 } from "react-bootstrap";
+import {
+  Capsule,
+  Clock,
+  Calendar,
+  Person,
+  HeartPulse
+} from "react-bootstrap-icons";
 import { fetchFamilyById } from "../api/families.api";
 import { fetchMembers, createMember, type Member, type MemberCreateData } from "../api/members.api";
 import {
@@ -23,6 +30,8 @@ import {
 import axios from "axios";
 import { API_BASE_URL } from "../config/api";
 import FamilyTree from "../components/FamilyTree";
+import { fetchActiveFamilyMedications } from "../api/medications.api";
+import { formatDate } from "../utils/helper";
 export default function Dashboard() {
   const { familyId } = useParams();
   const navigate = useNavigate();
@@ -38,6 +47,9 @@ const [gender, setGender] = useState<"male" | "female" | "other">("male");
 
 const [relationships, setRelationships] = useState<FamilyRelationship[]>([]);
 const [loadingTree, setLoadingTree] = useState(true);
+
+const [activeMedications, setActiveMedications] = useState<any[]>([]);
+const [loadingMeds, setLoadingMeds] = useState(false);
  interface FamilyRelationship {
   id: number;
   family_id: number;
@@ -52,6 +64,7 @@ const [loadingTree, setLoadingTree] = useState(true);
       loadFamily(Number(familyId));
       loadMembers(Number(familyId));
       fetchRelationships()
+      loadActiveMedications(Number(familyId));
     }
   }, [familyId]);
 
@@ -104,6 +117,18 @@ async function fetchRelationships () {
     }
   };
 
+  async function loadActiveMedications(id: number) {
+  try {
+    setLoadingMeds(true);
+    const meds = await fetchActiveFamilyMedications(id);
+    setActiveMedications(meds ?? []);
+  } catch (err) {
+    console.error("Failed to load active medications:", err);
+    setActiveMedications([]);
+  } finally {
+    setLoadingMeds(false);
+  }
+}
 async function handleCreateMember() {
   if (!familyId) return;
 
@@ -300,8 +325,116 @@ return (
         </Toast.Body>
       </Toast>
     </ToastContainer>
+
+  {/* Active Medications */}
+<Card className="mt-4 shadow-sm border-0">
+  <Card.Header className="fw-semibold d-flex justify-content-between align-items-center bg-light">
+    <div className="d-flex align-items-center">
+      <HeartPulse className="me-2 text-success" />
+      <span>Active Medications</span>
+    </div>
+    <span className="badge bg-success rounded-pill px-3">
+      {activeMedications.length}
+    </span>
+  </Card.Header>
+
+  <Card.Body style={{ background: "#f8fff9" }}>
+    {loadingMeds ? (
+      <div className="text-muted text-center py-4">
+        Loading medications...
+      </div>
+    ) : activeMedications.length === 0 ? (
+      <div className="text-muted text-center py-4">
+        No active medications
+      </div>
+    ) : (
+      <Row xs={1} md={2} lg={3} className="g-4">
+        {activeMedications.map((med) => {
+          const timing = (() => {
+  if (!med.timing) return "-";
+
+  try {
+    const parsed = JSON.parse(med.timing);
+    return Array.isArray(parsed)
+      ? parsed.join(", ")
+      : med.timing;
+  } catch {
+    return med.timing;
+  }
+})();
+
+          return (
+            <Col key={med.id}>
+              <Card className="h-100 shadow-sm border-0 border-start border-4 border-success">
+                <Card.Body>
+                  {/* Medicine Name */}
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <Card.Title className="mb-0 fw-semibold text-success">
+                      <Capsule className="me-2" />
+                      {med.medicine_name}
+                    </Card.Title>
+                    <span className="badge bg-success-subtle text-success border">
+                      Active
+                    </span>
+                  </div>
+
+                  {/* Member */}
+                  <div className="mb-2 text-muted small">
+                    <Person className="me-1" />
+                    {med.first_name} {med.last_name}
+                  </div>
+
+                  {/* Dosage + Frequency */}
+                  <div className="mb-2 small">
+                    <span className="badge bg-light text-dark me-2 border">
+                      💊 {med.dosage}
+                    </span>
+                    <span className="badge bg-light text-dark border">
+                      🔁 {med.frequency}
+                    </span>
+                  </div>
+
+                  {/* Timing Badges */}
+                  <div className="mb-3">
+                    <Clock className="me-1 text-muted" />
+                    {Array.isArray(timing) ? (
+                      timing.map((t: string, i: number) => (
+                        <span
+                          key={i}
+                          className="badge bg-primary-subtle text-primary me-1 border"
+                        >
+                          {t.trim()}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="badge bg-primary-subtle text-primary border">
+                        {timing}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Duration */}
+                  <div className="small text-muted">
+                    <Calendar className="me-1" />
+                    {formatDate(med.start_date)} → {formatDate(med.end_date)}
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          );
+        })}
+      </Row>
+    )}
+  </Card.Body>
+</Card>
+
+
+  </Container>
+);
+
+}
     {/* Family Tree */}
-<Card className="mt-4 shadow-sm">
+{/* <Card className="mt-4 shadow-sm">
   <Card.Header className="fw-semibold">
     Family Tree
   </Card.Header>
@@ -315,9 +448,4 @@ return (
       <FamilyTree members={members} relationships={relationships} />
     )}
   </Card.Body>
-</Card>
-
-  </Container>
-);
-
-}
+</Card> */}

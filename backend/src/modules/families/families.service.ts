@@ -51,3 +51,31 @@ export async function getAllFamilies() {
 
   return rows;
 }
+
+export async  function getActiveFamilyMedications(id: number) {
+  const [rows] = await pool.execute(
+    `
+    SELECT 
+      m.id,
+      m.medicine_name,
+      m.dosage,
+      m.frequency,
+      m.timing,
+      m.start_date,
+      m.end_date,
+      fm.id AS member_id,
+      fm.first_name,
+      fm.last_name
+    FROM medications m
+    JOIN family_members fm 
+      ON m.member_id = fm.id
+    WHERE fm.family_id = ?
+      AND m.is_active = 1
+      AND (m.end_date IS NULL OR m.end_date >= CURDATE())
+    ORDER BY fm.first_name, m.start_date DESC
+    `,
+    [id]
+  );
+
+  return rows;
+}

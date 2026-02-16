@@ -27,7 +27,14 @@ export interface MedicationCreateData {
   is_active?: boolean;
 }
 
+/**
+ * Fetch all medications for a family
+ */
+export async function fetchActiveFamilyMedications(familyId: number) {
+  const res = await axios.get(`${API_BASE_URL}/families/${familyId}/medications/active`);
 
+  return res.data.data;
+}
 
 
 /**

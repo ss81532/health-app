@@ -21,7 +21,7 @@ import {
   type MedicationCreateData,
 } from "../api/medications.api";
 import { fetchMemberById, fetchMembers, type Member } from "../api/members.api";
-import { calculateAge } from "../utils/helper";
+import { calculateAge, formatDate } from "../utils/helper";
 import { fetchMedicalDocuments, uploadMedicalDocument, type MedicalDocument } from "../api/medicalDocuments.api";
 
 export default function MemberDetails() {
@@ -271,7 +271,7 @@ async function loadDocuments(id: number) {
               </td>
 
               <td className="small">
-                {med.start_date} → {med.end_date || "Ongoing"}
+                {formatDate(med.start_date)} → {formatDate(med?.end_date)}
               </td>
 
               <td>

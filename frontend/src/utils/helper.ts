@@ -11,3 +11,15 @@ export function calculateAge(dob: string): number {
   }
   return age;
 }
+
+export function  formatDate(dateString: string) {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
