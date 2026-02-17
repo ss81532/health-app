@@ -55,25 +55,42 @@ export async function createAppointment(data: any) {
 }
 
 export async function updateAppointment(id: number, data: Partial<Appointment>) {
-  await db.execute(
-    `
-    UPDATE appointments
-    SET doctor_name = ?,
-        hospital_name = ?,
-        appointment_date = ?,
-        reason = ?,
-        status = ?
-    WHERE id = ?
-    `,
-    [
-      data.doctor_name,
-      data.hospital_name,
-      data.appointment_date,
-      data.reason,
-      data.status,
-      id,
-    ]
-  );
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  // Only add fields that are not null or undefined
+  if (data.doctor_name != null) {
+    fields.push("doctor_name = ?");
+    values.push(data.doctor_name);
+  }
+  if (data.hospital_name != null) {
+    fields.push("hospital_name = ?");
+    values.push(data.hospital_name);
+  }
+  if (data.appointment_date != null) {
+    fields.push("appointment_date = ?");
+    values.push(data.appointment_date);
+  }
+  if (data.reason != null) {
+    fields.push("reason = ?");
+    values.push(data.reason);
+  }
+  if (data.notes != null) {
+    fields.push("notes = ?");
+    values.push(data.notes);
+  }
+  if (data.status != null) {
+    fields.push("status = ?");
+    values.push(data.status);
+  }
+
+  // Nothing to update
+  if (fields.length === 0) return;
+
+  values.push(id);
+
+  const sql = `UPDATE appointments SET ${fields.join(", ")} WHERE id = ?`;
+  await db.execute(sql, values);
 }
 
 export async function deleteAppointment(id: number) {

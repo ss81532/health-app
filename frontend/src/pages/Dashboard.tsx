@@ -41,9 +41,9 @@ import { fetchActiveFamilyMedications } from "../api/medications.api";
 import { formatDate } from "../utils/helper";
 import UpcomingAppointments from "../components/appointments/UpcomingAppointments";
 import { dataService } from "../services/data.service";
+import { fetchUpcomingAppointments } from "../api/appointment.api";
 export default function Dashboard() {
   const { familyId } = useParams();
-const numericFamilyId = familyId ? Number(familyId) : null;
 dataService.setSelectedFamily(familyId)
   const navigate = useNavigate();
 
@@ -78,6 +78,17 @@ dataService.setSelectedFamily(familyId)
   const loadingContacts = false;
   const [activeMedications, setActiveMedications] = useState<any[]>([]);
   const [loadingMeds, setLoadingMeds] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [refreshAppointments, setRefreshAppointments] = useState(0);
+  const payload = {
+    id: selectedAppointment?.id,
+    doctor_name: selectedAppointment?.doctor_name,
+    hospital_name: selectedAppointment?.hospital_name,
+    appointment_date: selectedAppointment?.appointment_date.split("T")[0],
+    reason: selectedAppointment?.reason,
+    notes: selectedAppointment?.notes || null,
+  };
   interface FamilyRelationship {
     id: number;
     family_id: number;
@@ -261,9 +272,17 @@ dataService.setSelectedFamily(familyId)
             </div>
           </Card.Header>
 
-          <Card.Body>
-            <UpcomingAppointments familyId={familyId} />
-          </Card.Body>
+        <Card.Body>
+          {/* //for modal open */}
+  <UpcomingAppointments
+  familyId={familyId}
+  refreshKey={refreshAppointments}
+  onEditAppointment={(appt) => {
+    setSelectedAppointment(appt);
+    setShowAppointmentModal(true);
+  }}
+/>
+</Card.Body>
         </Card>
       )}
 
@@ -588,6 +607,109 @@ dataService.setSelectedFamily(familyId)
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Edit Appointment Modal */}
+<Modal
+  show={showAppointmentModal}
+  onHide={() => setShowAppointmentModal(false)}
+  centered
+>
+  <Modal.Header closeButton>
+    <Modal.Title>Edit Appointment</Modal.Title>
+  </Modal.Header>
+
+  <Modal.Body>
+    {selectedAppointment ? (
+      <Form>
+        <Form.Group className="mb-3">
+          <Form.Label>Doctor</Form.Label>
+          <Form.Control
+            value={selectedAppointment.doctor_name}
+            onChange={(e) =>
+              setSelectedAppointment({
+                ...selectedAppointment,
+                doctor_name: e.target.value,
+              })
+            }
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3">
+          <Form.Label>Hospital</Form.Label>
+          <Form.Control
+            value={selectedAppointment.hospital_name}
+            onChange={(e) =>
+              setSelectedAppointment({
+                ...selectedAppointment,
+                hospital_name: e.target.value,
+              })
+            }
+          />
+        </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Date</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={
+                    selectedAppointment.appointment_date
+                      ? selectedAppointment.appointment_date.split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setSelectedAppointment({
+                      ...selectedAppointment,
+                      appointment_date: e.target.value,
+                    })
+                  }
+                />
+        </Form.Group>
+
+        <Form.Group>
+          <Form.Label>Reason</Form.Label>
+          <Form.Control
+            value={selectedAppointment.reason}
+            onChange={(e) =>
+              setSelectedAppointment({
+                ...selectedAppointment,
+                reason: e.target.value,
+              })
+            }
+          />
+        </Form.Group>
+      </Form>
+    ) : (
+      <div>Loading...</div>
+    )}
+  </Modal.Body>
+
+  <Modal.Footer>
+    <Button variant="outline-secondary" onClick={() => setShowAppointmentModal(false)}>
+      Cancel
+    </Button>
+    <Button
+      variant="primary"
+      onClick={async () => {
+        try {
+          await axios.put(
+            `${API_BASE_URL}/appointments/${selectedAppointment.id}`,
+            payload
+          );
+          setShowAppointmentModal(false);
+          setRefreshAppointments(prev => prev + 1);
+        
+        } catch (err) {
+          console.error(err);
+          alert("Failed to update appointment");
+        }
+      }}
+    >
+      Save
+    </Button>
+  </Modal.Footer>
+</Modal>
+
+
       {/* Success Toast */}
       <ToastContainer position="top-end" className="p-3">
         <Toast
