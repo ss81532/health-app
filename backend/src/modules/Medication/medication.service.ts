@@ -16,8 +16,8 @@ export interface MedicationData {
 export async function createMedication(memberId: number, data: MedicationData) {
   const [result] = await db.execute<OkPacket>(
     `INSERT INTO medications 
-      (member_id, medicine_name, dosage, frequency, timing, start_date, end_date, instructions, is_active) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (member_id, medicine_name, dosage, frequency, timing, start_date, end_date, instructions,medical_record_id, is_active) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       memberId,
       data.medicine_name,

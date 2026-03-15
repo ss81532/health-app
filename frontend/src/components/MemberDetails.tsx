@@ -23,7 +23,8 @@ import {
 import { fetchMemberById, fetchMembers, type Member } from "../api/members.api";
 import { calculateAge, formatDate } from "../utils/helper";
 import { fetchMedicalDocuments, uploadMedicalDocument, type MedicalDocument } from "../api/medicalDocuments.api";
-import { Calendar, Person, PersonCircle } from "react-bootstrap-icons";
+import { Calendar, HeartPulse, Person, PersonCircle } from "react-bootstrap-icons";
+import { createMedicalRecord, deleteMedicalRecord, getMedicalRecords } from "../api/medical-records.api";
 
 export default function MemberDetails() {
   const { memberId } = useParams();
@@ -48,6 +49,16 @@ const [selectedFile, setSelectedFile] = useState<File | null>(null);
 const [uploading, setUploading] = useState(false);
 const [docsLoading, setDocsLoading] = useState(false);
 const [docsError, setDocsError] = useState<string | null>(null);
+// medical history state
+const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
+const [showRecordModal, setShowRecordModal] = useState(false);
+
+const [recordType, setRecordType] = useState("diagnosis");
+const [description, setDescription] = useState("");
+const [recordedAt, setRecordedAt] = useState("");
+
+//modal
+
 const FILE_BASE_URL = 'http://4.213.2.193:3000'
   // Load member and medications
 useEffect(() => {
@@ -57,6 +68,7 @@ useEffect(() => {
   loadMember(id);
   loadMedications(id);
   loadDocuments(id);
+   fetchMedicalRecords(id);
 }, [memberId]);
 
 
@@ -110,7 +122,32 @@ async function loadDocuments(id: number) {
   }
 }
 
+async function fetchMedicalRecords(memberId: number) {
+  try {
+    const data = await getMedicalRecords(memberId);
+    setMedicalRecords(data);
+  } catch (err) {
+    console.error("Failed to load medical records", err);
+  }
+}
 
+async function createMedicalRecords(memberId: number, payload: any) {
+  try {
+    await createMedicalRecord(memberId, payload);
+    fetchMedicalRecords(memberId);
+  } catch (err) {
+    console.error("Failed to create medical record", err);
+  }
+}
+
+async function deleteMedicalRecords(memberId: number, historyId: number) {
+  try {
+    await deleteMedicalRecord(memberId, historyId);
+    fetchMedicalRecords(memberId);
+  } catch (err) {
+    console.error("Failed to delete medical record", err);
+  }
+}
   async function handleAddMedication() {
     if (!medicineName.trim() || !frequency || timing.length === 0 || !startDate)
       return alert("Please fill all required fields");
@@ -193,12 +230,12 @@ async function loadDocuments(id: number) {
         </Card>
       )}
 
-       <div className="d-flex justify-content-between align-items-center mb-3">
-    <h4 className="fw-semibold">Medications</h4>
-    <Button size="sm" variant="primary" onClick={() => setShowAddModal(true)}>
-      + Add Medication
-    </Button>
-  </div>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h4 className="fw-semibold">Medications</h4>
+        <Button size="sm" variant="primary" onClick={() => setShowAddModal(true)}>
+          + Add Medication
+        </Button>
+      </div>
 
       {/* <Table striped bordered hover>
         <thead>
@@ -235,65 +272,65 @@ async function loadDocuments(id: number) {
           )}
         </tbody>
       </Table> */}
-       <Card className="card mb-4">
-    <Card.Body className="p-0">
-      <Table responsive hover className="mb-0 align-middle">
-        <thead className="table-light">
-          <tr>
-            <th>Name</th>
-            <th>Dosage</th>
-            <th>Frequency</th>
-            <th>Timing</th>
-            <th>Duration</th>
-            <th>Status</th>
-          </tr>
-        </thead>
+      <Card className="card mb-4">
+        <Card.Body className="p-0">
+          <Table responsive hover className="mb-0 align-middle">
+            <thead className="table-light">
+              <tr>
+                <th>Name</th>
+                <th>Dosage</th>
+                <th>Frequency</th>
+                <th>Timing</th>
+                <th>Duration</th>
+                <th>Status</th>
+              </tr>
+            </thead>
 
-        <tbody>
-          {medications.map((med) => (
-            <tr key={med.id}>
-              <td className="fw-medium">{med.medicine_name}</td>
-              <td>{med.dosage || "-"}</td>
+            <tbody>
+              {medications.map((med) => (
+                <tr key={med.id}>
+                  <td className="fw-medium">{med.medicine_name}</td>
+                  <td>{med.dosage || "-"}</td>
 
-              <td>
-                <Badge bg="info">{med.frequency}</Badge>
-              </td>
+                  <td>
+                    <Badge bg="info">{med.frequency}</Badge>
+                  </td>
 
-              <td>
-                {med.timing.map((t) => (
-                  <Badge
-                    key={t}
-                    bg="secondary"
-                    className="me-1 text-capitalize"
-                  >
-                    {t}
-                  </Badge>
-                ))}
-              </td>
+                  <td>
+                    {med.timing.map((t) => (
+                      <Badge
+                        key={t}
+                        bg="secondary"
+                        className="me-1 text-capitalize"
+                      >
+                        {t}
+                      </Badge>
+                    ))}
+                  </td>
 
-              <td className="small">
-                {formatDate(med.start_date)} → {formatDate(med?.end_date)}
-              </td>
+                  <td className="small">
+                    {formatDate(med.start_date)} → {formatDate(med?.end_date)}
+                  </td>
 
-              <td>
-                <Badge bg={med.is_active ? "success" : "secondary"}>
-                  {med.is_active ? "Active" : "Inactive"}
-                </Badge>
-              </td>
-            </tr>
-          ))}
+                  <td>
+                    <Badge bg={med.is_active ? "success" : "secondary"}>
+                      {med.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
 
-          {medications.length === 0 && (
-            <tr>
-              <td colSpan={6} className="text-center text-muted py-4">
-                No medications added yet
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </Table>
-    </Card.Body>
-  </Card>
+              {medications.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center text-muted py-4">
+                    No medications added yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
+        </Card.Body>
+      </Card>
 
       {/* Add Medication Modal */}
       <Modal
@@ -408,13 +445,159 @@ async function loadDocuments(id: number) {
         </Toast>
       </ToastContainer>
 
+{/* Medical History */}
+      {/* <hr className="my-4" /> */}
+
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h4 className="fw-semibold">
+          <HeartPulse className="me-2 text-danger" size={20} />
+          Medical History
+        </h4>
+
+        <Button
+          size="sm"
+          variant="primary"
+          onClick={() => setShowRecordModal(true)}
+        >
+          + Add Record
+        </Button>
+      </div>
+
+{/* Add Medical Record Modal */}
+<Modal
+  show={showRecordModal}
+  onHide={() => setShowRecordModal(false)}
+  centered
+>
+  <Modal.Header closeButton>
+    <Modal.Title>Add Medical History</Modal.Title>
+  </Modal.Header>
+
+  <Modal.Body>
+    <Form>
+      <Form.Group className="mb-3">
+        <Form.Label>Type *</Form.Label>
+        <Form.Select
+          value={recordType}
+          onChange={(e) => setRecordType(e.target.value)}
+        >
+          <option value="diagnosis">Diagnosis</option>
+          <option value="condition">Condition</option>
+          <option value="allergy">Allergy</option>
+          <option value="surgery">Surgery</option>
+        </Form.Select>
+      </Form.Group>
+
+      <Form.Group className="mb-3">
+        <Form.Label>Description *</Form.Label>
+        <Form.Control
+          placeholder="Example: Diabetes Type 2"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </Form.Group>
+
+      <Form.Group>
+        <Form.Label>Date</Form.Label>
+        <Form.Control
+          type="date"
+          value={recordedAt}
+          onChange={(e) => setRecordedAt(e.target.value)}
+        />
+      </Form.Group>
+    </Form>
+  </Modal.Body>
+
+  <Modal.Footer>
+    <Button
+      variant="secondary"
+      onClick={() => setShowRecordModal(false)}
+    >
+      Cancel
+    </Button>
+
+    <Button
+      variant="primary"
+      onClick={async () => {
+        await createMedicalRecords(memberId, {
+          record_type: recordType,
+          description,
+          recorded_at: recordedAt
+        });
+
+        setShowRecordModal(false);
+
+        // reset form
+        setDescription("");
+        setRecordedAt("");
+        setRecordType("diagnosis");
+      }}
+    >
+      Add Record
+    </Button>
+  </Modal.Footer>
+</Modal>
+<Card className="card mb-4">
+  <Card.Body className="p-0">
+    <Table responsive hover className="mb-0 align-middle">
+      <thead className="table-light">
+        <tr>
+          <th>Condition</th>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {medicalRecords.map((record) => (
+          <tr key={record.id}>
+            <td className="fw-medium">{record.description}</td>
+
+            <td>
+              <Badge bg="warning" className="text-capitalize">
+                {record.record_type}
+              </Badge>
+            </td>
+
+            <td className="small text-muted">
+              {record.recorded_at
+                ? new Date(record.recorded_at).toLocaleDateString()
+                : "-"}
+            </td>
+
+            <td>
+              <Button
+                size="sm"
+                variant="outline-danger"
+                onClick={() =>
+                  deleteMedicalRecords(memberId, record.id)
+                }
+              >
+                Delete
+              </Button>
+            </td>
+          </tr>
+        ))}
+
+        {medicalRecords.length === 0 && (
+          <tr>
+            <td colSpan={4} className="text-center text-muted py-4">
+              No medical history recorded
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </Table>
+  </Card.Body>
+</Card>
       <hr className="my-4" />
 
-<div className="d-flex justify-content-between align-items-center mb-3">
-    <h4 className="fw-semibold">Medical Documents</h4>
-  </div>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h4 className="fw-semibold">Medical Documents</h4>
+      </div>
 
-{/* <Card className="mb-4 shadow-sm">
+      {/* <Card className="mb-4 shadow-sm">
   <Card.Body>
     <Form.Group className="mb-3">
       <Form.Label>Upload PDF</Form.Label>
@@ -436,93 +619,93 @@ async function loadDocuments(id: number) {
     </Button>
   </Card.Body>
 </Card> */}
- <Card className="card mb-3">
-    <Card.Body>
-      <Form.Group className="mb-3">
-        <Form.Label className="fw-medium">
-          Upload Medical PDF
-        </Form.Label>
-        <Form.Control
-          type="file"
-          accept="application/pdf"
-          onChange={(e) =>
-            setSelectedFile(e.target.files?.[0] ?? null)
-          }
-        />
-      </Form.Group>
+      <Card className="card mb-3">
+        <Card.Body>
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-medium">
+              Upload Medical PDF
+            </Form.Label>
+            <Form.Control
+              type="file"
+              accept="application/pdf"
+              onChange={(e) =>
+                setSelectedFile(e.target.files?.[0] ?? null)
+              }
+            />
+          </Form.Group>
 
-      <Button
-        variant="primary"
-        disabled={!selectedFile || uploading}
-        onClick={handleUploadDocument}
-      >
-        {uploading ? "Uploading..." : "Upload Document"}
-      </Button>
-    </Card.Body>
-  </Card>
+          <Button
+            variant="primary"
+            disabled={!selectedFile || uploading}
+            onClick={handleUploadDocument}
+          >
+            {uploading ? "Uploading..." : "Upload Document"}
+          </Button>
+        </Card.Body>
+      </Card>
 
-  {/* Documents Table */}
-  <Card className="card">
-    <Card.Body className="p-0">
-      <Table hover responsive className="mb-0 align-middle">
-        <thead className="table-light">
-          <tr>
-            <th>Document</th>
-            <th>Uploaded</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+      {/* Documents Table */}
+      <Card className="card">
+        <Card.Body className="p-0">
+          <Table hover responsive className="mb-0 align-middle">
+            <thead className="table-light">
+              <tr>
+                <th>Document</th>
+                <th>Uploaded</th>
+                <th>Action</th>
+              </tr>
+            </thead>
 
-        <tbody>
-          {documents.map((doc) => (
-            <tr key={doc.id}>
-              <td className="fw-medium">
-                📄 {doc.document_name}
-              </td>
-              <td className="small text-muted">
-                {new Date(doc.uploaded_at).toLocaleDateString()}
-              </td>
-              <td>
-                <a
-                  href={`${FILE_BASE_URL}${doc.file_url}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  View
-                </a>
-              </td>
-            </tr>
-          ))}
+            <tbody>
+              {documents.map((doc) => (
+                <tr key={doc.id}>
+                  <td className="fw-medium">
+                    📄 {doc.document_name}
+                  </td>
+                  <td className="small text-muted">
+                    {new Date(doc.uploaded_at).toLocaleDateString()}
+                  </td>
+                  <td>
+                    <a
+                      href={`${FILE_BASE_URL}${doc.file_url}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View
+                    </a>
+                  </td>
+                </tr>
+              ))}
 
-          {docsLoading && (
-            <tr>
-              <td colSpan={3} className="text-center py-3">
-                Loading documents...
-              </td>
-            </tr>
-          )}
+              {docsLoading && (
+                <tr>
+                  <td colSpan={3} className="text-center py-3">
+                    Loading documents...
+                  </td>
+                </tr>
+              )}
 
-          {docsError && !docsLoading && (
-            <tr>
-              <td colSpan={3} className="text-center text-danger">
-                {docsError}
-              </td>
-            </tr>
-          )}
+              {docsError && !docsLoading && (
+                <tr>
+                  <td colSpan={3} className="text-center text-danger">
+                    {docsError}
+                  </td>
+                </tr>
+              )}
 
-          {!docsLoading && !docsError && documents.length === 0 && (
-            <tr>
-              <td colSpan={3} className="text-center text-muted py-4">
-                No documents uploaded yet
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </Table>
-    </Card.Body>
-  </Card>
+              {!docsLoading && !docsError && documents.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="text-center text-muted py-4">
+                    No documents uploaded yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
+        </Card.Body>
+      </Card>
 
-{/* <Table bordered hover>
+      {/* <Table bordered hover>
   <thead>
     <tr>
       <th>File Name</th>

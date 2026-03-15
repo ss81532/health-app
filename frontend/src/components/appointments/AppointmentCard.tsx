@@ -66,7 +66,7 @@ export default function AppointmentCard({ appointment, onEdit, onDeleted }: Prop
         </div>
 
         {/* Appointment Info */}
-        <Card.Text className="mb-3">
+        <div className="mb-3">
           <div className="d-flex align-items-center gap-2 mb-1">
             <Person size={16} className="text-primary" />
             <strong>Doctor:</strong> {appointment.doctor_name || "-"}
@@ -86,7 +86,7 @@ export default function AppointmentCard({ appointment, onEdit, onDeleted }: Prop
             <JournalText size={16} className="text-secondary" />
             <strong>Reason:</strong> {appointment.reason || "-"}
           </div>
-        </Card.Text>
+        </div>
 
         {/* Action Buttons */}
         <div className="d-flex justify-content-end gap-2">
