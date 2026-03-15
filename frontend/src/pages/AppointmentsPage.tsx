@@ -76,7 +76,9 @@ const handleSave = async (e?: any) => {
 
     setAppointments((prev) => [...prev, newAppointment]);
     setShowModal(false);
-
+    const onEditAppointment = () =>{
+      setShowModal(true);
+    }
     setFormData({
       title: "",
       hospital: "",
@@ -119,7 +121,15 @@ const handleSave = async (e?: any) => {
       )}
 
       {appointments.map((appt) => (
-        <AppointmentCard key={appt.id} appointment={appt}  />
+        <AppointmentCard key={appt.id} appointment={appt}             onEdit={() => {
+              // onEditAppointment(appt)
+              setShowModal(true);
+            }} // parent handles modal
+            
+            onDeleted={() => {
+              // loadAppointments();                // refresh list after delete
+              // onDeleted?.();                      // optional parent callback
+            }}  />
       ))}
 
       {/* MODAL */}
