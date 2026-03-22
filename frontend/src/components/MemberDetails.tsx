@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   Container,
@@ -23,7 +23,7 @@ import {
 import { fetchMemberById, fetchMembers, type Member } from "../api/members.api";
 import { calculateAge, formatDate } from "../utils/helper";
 import { fetchMedicalDocuments, uploadMedicalDocument, type MedicalDocument } from "../api/medicalDocuments.api";
-import { Calendar, HeartPulse, Person, PersonCircle } from "react-bootstrap-icons";
+import { Calendar, Capsule, FileEarmarkPdf, HeartPulse, Person, PersonCircle } from "react-bootstrap-icons";
 import { createMedicalRecord, deleteMedicalRecord, getMedicalRecords } from "../api/medical-records.api";
 
 export default function MemberDetails() {
@@ -60,6 +60,7 @@ const [recordedAt, setRecordedAt] = useState("");
 //modal
 
 const FILE_BASE_URL = 'http://4.213.2.193:3000'
+const fileInputRef = useRef<HTMLInputElement | null>(null);
   // Load member and medications
 useEffect(() => {
   const id = Number(memberId);
@@ -191,18 +192,16 @@ async function deleteMedicalRecords(memberId: number, historyId: number) {
       setTiming([...timing, time]);
     }
   };
+  async function handleUploadDocument(file: File) {
+  if (!file || !memberId) return;
 
-  async function handleUploadDocument() {
-  if (!selectedFile || !memberId) return;
-
-  if (selectedFile.type !== "application/pdf") {
+  if (file.type !== "application/pdf") {
     return alert("Only PDF files are allowed");
   }
 
   try {
     setUploading(true);
-    await uploadMedicalDocument(Number(memberId), selectedFile);
-    setSelectedFile(null);
+    await uploadMedicalDocument(Number(memberId), file);
     await loadDocuments(Number(memberId));
   } catch (e) {
     alert("Upload failed");
@@ -231,7 +230,10 @@ async function deleteMedicalRecords(memberId: number, historyId: number) {
       )}
 
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="fw-semibold">Medications</h4>
+        
+        <h4 className="fw-semibold">
+          <Capsule className="me-2 text-primary" size={20} />
+          Medications</h4>
         <Button size="sm" variant="primary" onClick={() => setShowAddModal(true)}>
           + Add Medication
         </Button>
@@ -562,7 +564,7 @@ async function deleteMedicalRecords(memberId: number, historyId: number) {
 
             <td className="small text-muted">
               {record.recorded_at
-                ? new Date(record.recorded_at).toLocaleDateString()
+                ? formatDate(new Date(record.recorded_at).toLocaleDateString())
                 : "-"}
             </td>
 
@@ -591,58 +593,37 @@ async function deleteMedicalRecords(memberId: number, historyId: number) {
     </Table>
   </Card.Body>
 </Card>
-      <hr className="my-4" />
 
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="fw-semibold">Medical Documents</h4>
-      </div>
+  <h4 className="fw-semibold">
+    <FileEarmarkPdf className="me-2 text-danger" size={20} />
+    Medical Documents
+  </h4>
 
-      {/* <Card className="mb-4 shadow-sm">
-  <Card.Body>
-    <Form.Group className="mb-3">
-      <Form.Label>Upload PDF</Form.Label>
-      <Form.Control
-        type="file"
-        accept="application/pdf"
-        onChange={(e) =>
-          setSelectedFile(e.target.files?.[0] ?? null)
-        }
-      />
-    </Form.Group>
+  <Button
+    variant="primary"
+    size="sm"
+    disabled={uploading}
+    onClick={() => fileInputRef.current?.click()}
+  >
+    {uploading ? "Uploading..." : "+ Upload Medical Document"}
+  </Button>
 
-    <Button
-      variant="primary"
-      disabled={!selectedFile || uploading}
-      onClick={handleUploadDocument}
-    >
-      {uploading ? "Uploading..." : "Upload Document"}
-    </Button>
-  </Card.Body>
-</Card> */}
-      <Card className="card mb-3">
-        <Card.Body>
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-medium">
-              Upload Medical PDF
-            </Form.Label>
-            <Form.Control
-              type="file"
-              accept="application/pdf"
-              onChange={(e) =>
-                setSelectedFile(e.target.files?.[0] ?? null)
-              }
-            />
-          </Form.Group>
+  <input
+    ref={fileInputRef}
+    type="file"
+    accept="application/pdf"
+    style={{ display: "none" }}
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-          <Button
-            variant="primary"
-            disabled={!selectedFile || uploading}
-            onClick={handleUploadDocument}
-          >
-            {uploading ? "Uploading..." : "Upload Document"}
-          </Button>
-        </Card.Body>
-      </Card>
+      handleUploadDocument(file);
+      e.target.value = "";
+    }}
+  />
+</div>
+
 
       {/* Documents Table */}
       <Card className="card">
@@ -663,7 +644,7 @@ async function deleteMedicalRecords(memberId: number, historyId: number) {
                     📄 {doc.document_name}
                   </td>
                   <td className="small text-muted">
-                    {new Date(doc.uploaded_at).toLocaleDateString()}
+                    {formatDate(new Date(doc.uploaded_at).toLocaleDateString())}
                   </td>
                   <td>
                     <a
